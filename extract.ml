@@ -5,8 +5,8 @@ open Notty.Infix
 let s = I.string A.empty
 let b = I.string A.(st bold)
 let u = I.string A.(st underline)
-let lpad ?(s=s) i x = x |> s |> I.hsnap ~align:`Right i
-let rpad ?(s=s) i x = x |> s |> I.hsnap ~align:`Left i
+let lpad ?(f=s) i x = x |> f |> I.hsnap ~align:`Right i
+let rpad ?(f=s) i x = x |> f |> I.hsnap ~align:`Left i
 let endl = Notty_unix.output_image_endline
 
 let marks ~idx ~len qs =
@@ -24,7 +24,7 @@ let g x = (match x with
     | "22" -> "II.ii"
     | "3"  -> "III"
     | x    -> x
-  ) |> rpad ~s:b 6
+  ) |> rpad ~f:b 6
 
 let format_results ~part p1 p2 p3 p4 answers =
   let (t1,l1), (t2,l2), (t3,l3), (t4,l4) = match part with
@@ -36,15 +36,15 @@ let format_results ~part p1 p2 p3 p4 answers =
   in
   let p123_result =
     (
-      rpad ~s:u 7 t1 <|> s (" ("^p1^"/100)   ")
+      rpad ~f:u 7 t1 <|> s (" ("^p1^"/100)   ")
       <->
       marks ~idx:0 ~len:l1 answers
     ) <|> (
-      rpad ~s:u 7 t2 <|> s (" ("^p2^"/100)   ")
+      rpad ~f:u 7 t2 <|> s (" ("^p2^"/100)   ")
       <->
       marks ~idx:l1 ~len:l2 answers
     ) <|> (
-      rpad ~s:u 7 t3 <|> s (" ("^p3^"/100)   ")
+      rpad ~f:u 7 t3 <|> s (" ("^p3^"/100)   ")
       <->
       marks ~idx:(l1+l2) ~len:l3 answers
     )
@@ -52,7 +52,7 @@ let format_results ~part p1 p2 p3 p4 answers =
   let p4_result = (match part with
       | "II" -> u t4 <|> s (" ("^p4^"/100)")
       | "IB" ->
-        rpad ~s:u 7 t4 <|> s (" ("^p4^"/100)   ")
+        rpad ~f:u 7 t4 <|> s (" ("^p4^"/100)   ")
         <->
         marks ~idx:(l1+l2+l3) ~len:l4 answers
       | _ -> assert false
@@ -67,7 +67,7 @@ let format_row ~part = function
   | name :: college :: grade :: rank :: total :: p7 :: p8 :: p9 :: dis :: _
     :: answers -> (
       assert (college = "CHR");
-      (rpad ~s:b 18 name <|> (g grade) <|> s (
+      (rpad ~f:b 18 name <|> (g grade) <|> s (
           if (int_of_string rank < 50) then "rank:"^rank^"/94" else ""
         )
       )
