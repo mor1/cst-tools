@@ -1,6 +1,6 @@
 .PHONY: build
 build:
-	jbuilder build extract.exe
+	dune build extract.exe
 
 .PHONY: clean
 clean:
