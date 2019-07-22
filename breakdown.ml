@@ -27,6 +27,7 @@ module P = struct
           let paper3, summary = answers |> drop 1 |> take_drop  9 in
           let grade = CCList.nth summary 39 in
           name, grade, None, [ "1", paper1; "2", paper2; "3", paper3 ]
+
         | _ as row
           ->
           Printf.printf "ERR: %s\n%!" (String.concat "; " row);
@@ -46,6 +47,7 @@ module P = struct
           let paper7          = take      10 columns in
           name, grade, Some (rank, 102),
           [ "3",paper3; "4",paper4; "5",paper5; "6",paper6; "7",paper7 ]
+
         | _ as row
           ->
           Printf.printf "ERR: %s\n%!" (String.concat "; " row);
@@ -57,14 +59,15 @@ module P = struct
         | name :: "CHR" :: grade :: rank :: _tot :: _p7 :: _p8 :: _p9 :: columns
           ->
           let open CCList in
-          let dis, columns    = take_drop  1 columns in
-          let columns         = drop       1 columns in
-          let uoas, columns   = take_drop 11 columns in
+          let dis,    columns = take_drop  1 columns in
+          let         columns = drop       1 columns in
+          let uoas,   columns = take_drop 11 columns in
           let paper7, columns = take_drop 11 columns in
           let paper8, columns = take_drop 13 columns in
           let paper9          = take      14 columns in
           name, grade, Some (rank, 97),
           ["dis",dis; "uoas", uoas; "7",paper7; "8",paper8; "9",paper9]
+
         | _ as row
           ->
           Printf.printf "ERR: %s\n%!" (String.concat "; " row);
@@ -97,7 +100,9 @@ module F = struct
   let endl line = Notty_unix.(line |> eol |> output_image)
 
   let sep = s (String.make 80 '-')
+
   let name n = rpad ~f:b 18 n
+
   let grade g = match P.grade g with
     | None -> I.empty
     | Some g -> rpad ~f:b 6 g
