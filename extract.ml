@@ -1,4 +1,3 @@
-open Csv
 open Notty
 open Notty.Infix
 
@@ -87,7 +86,7 @@ let format_results ~part pA pB pC pD answers =
 
 let format_row = function
   | "IB" -> (function
-      | name :: college :: grade :: rank :: total :: p3 :: p4 :: p5 :: p6 :: p7 :: _penalty :: answers ->
+      | name :: college :: grade :: rank :: _total :: p3 :: p4 :: p5 :: p6 :: p7 :: _penalty :: answers ->
           assert (college = "CHR");
           (rpad ~f:b 18 name <|> (g grade) <|> s ("rank:"^rank^"/"^n_ib))
           <->
@@ -102,7 +101,7 @@ let format_row = function
     )
 
   | "II" as part -> (function
-      | name :: college :: grade :: rank :: total :: p7 :: p8 :: p9 :: dis :: _penalty :: answers ->
+      | name :: college :: grade :: rank :: _total :: p7 :: p8 :: p9 :: dis :: _penalty :: answers ->
           assert (college = "CHR");
           (rpad ~f:b 18 name <|> (g grade) <|> s ("rank:"^rank^"/"^n_ii))
           <->
@@ -113,9 +112,8 @@ let format_row = function
   | _ -> assert false
 
 let () =
-  let path = Sys.argv.(1) in
-  let csv = Csv.load path |> List.tl in
-  match csv with
+  let csvs = Sys.argv.(1) |> Csv.load in
+  match csvs with
   | [] -> assert false
   | header :: rows ->
     let part = match List.hd header with
