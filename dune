@@ -1,3 +1,7 @@
 (executable
- (name extract)
- (libraries csv notty notty.unix containers astring))
+ (name breakdown)
+ (libraries csv
+            notty
+            notty.unix
+            containers
+            ))
