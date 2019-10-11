@@ -13,9 +13,11 @@ module P = struct
 
   let cst_part rows = match List.hd rows with
     | "Seq" :: _ -> "IA", List.tl rows
-    | "Computer Science Tripos Part IB" :: _ -> "IB", List.tl rows
+    | ("Computer Science Tripos Part IB" :: _
+      | "" :: "" :: "E2018" :: _
+      ) -> "IB", List.tl rows
     | "" :: "" :: "E2019" :: _ -> "II", List.tl rows
-    | _ -> failwith "unknown Part of Tripos"
+    | _ as s -> failwith ("unknown Part of Tripos: "^ (String.concat ", " s))
 
   let ia_candidates rows =
     rows |> List.map (function
