@@ -19,13 +19,13 @@ module P = struct
 
   let ia_candidates rows =
     rows |> List.map (function
-        | _ :: name :: "CHR" :: _gender :: _tripos :: _cid :: answers
+        | _ :: name :: "CHR" :: _gender :: _tripos :: _cid :: columns
           ->
           let open CCList in
-          let paper1, answers = answers |>           take_drop 10 in
-          let paper2, answers = answers |> drop 2 |> take_drop 10 in
-          let paper3, summary = answers |> drop 1 |> take_drop  9 in
-          let grade = CCList.nth summary 39 in
+          let paper1, columns = columns |>           take_drop 10 in
+          let paper2, columns = columns |> drop 2 |> take_drop 10 in
+          let paper3, columns = columns |> drop 1 |> take_drop  9 in
+          let grade = CCList.nth columns 39 in
           name, grade, None, [ "1", paper1; "2", paper2; "3", paper3 ]
 
         | _ as row
@@ -40,11 +40,11 @@ module P = struct
           ->
           let open CCList in
           let columns = drop 7 columns in
-          let paper3, columns = take_drop  9 columns in
-          let paper4, columns = take_drop  9 columns in
-          let paper5, columns = take_drop  8 columns in
-          let paper6, columns = take_drop 10 columns in
-          let paper7          = take      10 columns in
+          let paper3, columns = columns |> take_drop  9 in
+          let paper4, columns = columns |> take_drop  9 in
+          let paper5, columns = columns |> take_drop  8 in
+          let paper6, columns = columns |> take_drop 10 in
+          let paper7          = columns |> take      10 in
           name, grade, Some (rank, 102),
           [ "3",paper3; "4",paper4; "5",paper5; "6",paper6; "7",paper7 ]
 
@@ -163,6 +163,7 @@ let ( >> ) f g x = g (f x)
 let ( <| ) f x = f x
 
 let () =
+  let input = Array.(sub Sys.argv 1 ((length Sys.argv) - 1)) in
   (Csv.load
    >> P.cst_part
    >> (function
@@ -173,4 +174,4 @@ let () =
      )
    >> List.iter F.(candidate >> endl)
   )
-  |> Array.iter <| Array.(sub Sys.argv 1 ((length Sys.argv) - 1))
+  |> Array.iter <| input
