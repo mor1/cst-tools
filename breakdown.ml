@@ -1,6 +1,18 @@
 open Notty
 open Notty.Infix
 
+let modules = [
+  "CC";
+  "MRS";
+  "MSP";
+  "AGIP";
+  "DS";
+  "DSP";
+  "NLP";
+  "PC";
+  "TC"
+]
+
 module P = struct
   let grade = function
     | "1" | "I"  -> Some "I"
@@ -13,10 +25,11 @@ module P = struct
 
   let cst_part rows = match List.hd rows with
     | "Seq" :: _ -> "IA", List.tl rows
+
     | ("Computer Science Tripos Part IB" :: _
       | "" :: "" :: "E2018" :: _
       ) -> "IB", List.tl rows
-    | "" :: "" :: "E2019" :: _ -> "II", List.tl rows
+    | "" :: "" :: "" :: "" :: "E2020" :: _ -> "II", List.tl rows
     | _ as s -> failwith ("unknown Part of Tripos: "^ (String.concat ", " s))
 
   let ia_candidates rows =
@@ -58,16 +71,17 @@ module P = struct
 
   let ii_candidates rows =
     rows |> CCList.drop 2 |> CCList.map (function
-        | name :: "CHR" :: grade :: rank :: _tot :: _p7 :: _p8 :: _p9 :: columns
+        | _blind :: name :: "CHR" :: _gender :: clas :: _safety :: _safeclass
+          :: rank :: _tot :: _p7 :: _p8 :: _p9 :: columns
           ->
           let open CCList in
           let dis,    columns = take_drop  1 columns in
           let         columns = drop       1 columns in
-          let uoas,   columns = take_drop 11 columns in
+          let uoas,   columns = take_drop (List.length modules) columns in
           let paper7, columns = take_drop 11 columns in
-          let paper8, columns = take_drop 13 columns in
-          let paper9          = take      14 columns in
-          name, grade, Some (rank, 97),
+          let paper8, columns = take_drop 15 columns in
+          let paper9          = take      15 columns in
+          name, clas, Some (rank, 97),
           ["dis",dis; "uoas", uoas; "7",paper7; "8",paper8; "9",paper9]
 
         | _ as row
@@ -76,20 +90,6 @@ module P = struct
           failwith "unexpected row"
       )
 end
-
-let modules = [
-  "AGIP";
-  "CC";
-  "DS";
-  "DSP";
-  "DSPCM";
-  "MET";
-  "MRS";
-  "MSP";
-  "NLP";
-  "PC";
-  "TC"
-]
 
 module F = struct
   let s = I.string A.empty
