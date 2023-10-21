@@ -1,14 +1,45 @@
+DOCDIR = _build/default/_doc/_html/
+
+.default: build
+
 .PHONY: build
 build:
 	dune build @all
 
-.PHONY: depend depends
-depend depends:
-	opam install \
-	  containers \
-	  csv \
-	  notty
-
 .PHONY: clean
 clean:
-	$(RM) -r _build
+	dune clean
+
+.PHONY: install
+install:
+	dune build @install
+	ln -sf ~/u/src/breakdown/_build/install/default/bin/breakdown ~/.local/bin/
+
+.PHONY: uninstall
+uninstall:
+	dune uninstall
+
+.PHONY: test
+test:
+	dune runtest
+
+.PHONY: lint
+lint:
+	dune build @lint
+	dune-release lint
+
+.PHONY: doc
+doc:
+	opam list -i --silent odoc || opam install -y odoc
+	dune build @doc
+	dune build @doc-private
+
+.PHONY: read
+read: doc
+	open $(DOCDIR)/index.html || open $(DOCDIR)
+
+.PHONY: release
+release:
+	opam list -i --silent dune-release || opam install -y dune-release
+	dune-release tag
+	dune-release -vv

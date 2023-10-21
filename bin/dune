@@ -1,5 +1,6 @@
 (executable
- (name breakdown)
+ (public_name breakdown)
+ (name main)
  (libraries csv
             notty
             notty.unix
