@@ -1,34 +1,37 @@
 open Notty
 open Notty.Infix
 
-let modules = [
-    "CAT";
-    "IRO";
-    "MSP";
-    "MVP";
-    "AGIP";
-    "ADS";
-    "DSP";
-    "DSPCM";
-    "NLP";
+let modules =
+  [
     "AOS";
+    "ADS";
+    "AGIP";
+    "ARO";
+    "CAT";
     "CSM";
     "CYC";
     "DNN";
+    "DSP";
     "IML";
-    "CC"
+    "FL";
+    "ER";
+    "CC";
+    "IRO";
+    "MSP";
+    "MVP";
+    "MH";
+    "NLP";
   ]
-
 
 module P = struct
   let grade = function
-    | "1" | "I"  -> Some "I"
-    | "21" | "II.1" -> Some "II.i"
-    | "22" | "II.2" -> Some "II.ii"
-    | "3" | "III"  -> Some "III"
+    | "1" | "I" -> Some "I"
+    | "21" | "II.1" | "2.1" -> Some "II.i"
+    | "22" | "II.2" | "2.2" -> Some "II.ii"
+    | "3" | "III" -> Some "III"
     | "W" -> Some "W" (* withdrawn *)
     | "" -> None
-    | _ as g -> failwith ("unknown grade: "^g)
+    | _ as g -> failwith ("unknown grade: " ^ g)
 
   let cst_part = function
     | "ia.csv" -> "IA"
@@ -37,101 +40,91 @@ module P = struct
     | _ as s -> failwith ("unknown Part of Tripos: " ^ s)
 
   let ia_candidates out_of rows =
-    rows
-    |> CCList.drop 3
+    rows |> CCList.drop 3
     |> CCList.filter (function
-           | _bcn :: _name :: "CHR" :: _ -> true
-           | _ -> false
-         )
+         | _bcn :: _surname :: _forename :: "CHR" :: _ -> true
+         | _ -> false)
     |> CCList.map (function
-           | bcn :: _crsid :: "CHR" :: name :: rank :: total :: total_p1 :: total_p2 :: total_p3 :: _maths_p1 :: _maths_p2 :: _total_maths :: _scicomp :: grade :: columns
-             ->
-              let open CCList in
-              let bcn1, columns = columns |> take_drop 1 in
-              let bcn1 = List.hd bcn1 in
-              let paper1, columns = columns |> drop 3 |> take_drop 10 in
+         | _bcn :: surname :: forename :: "CHR" :: total_p1 :: total_p2
+           :: total_p3 :: _total_maths :: _penalties :: total :: _percentage
+           :: rank :: columns ->
+             let open CCList in
+             let paper1, columns = columns |> take_drop 10 in
+             let paper2, columns = columns |> drop 1 |> take_drop 10 in
+             let paper3, columns = columns |> drop 1 |> take_drop 9 in
+             let grade = columns |> drop 9 |> drop 1 |> take 1 in
 
-              let bcn2, columns = columns |> drop 1 |> take_drop 1 in
-              let bcn2 = List.hd bcn2 in
-              let paper2, columns = columns |> drop 3 |> take_drop 10 in
-
-              let bcn3, columns = columns |> drop 1 |> take_drop 1 in
-              let bcn3 = List.hd bcn3 in
-              let paper3 = columns |> drop 3 |> take 9 in
-
-              if not (bcn = bcn1 && bcn1 = bcn2 && bcn2 = bcn3) then
-                failwith (Printf.sprintf "mismatched BCNs bcn=%s bcn1=%s bcn2=%s bcn3=%s" bcn bcn1 bcn2 bcn3);
-
-              name, grade, Some (rank, out_of), total,
-              [ "1", paper1, total_p1;
-                "2", paper2, total_p2;
-                "3", paper3, total_p3
-              ]
-
-           | _ as row
-             ->
-              Printf.printf "ERR: %s\n%!" (String.concat "; " row);
-              failwith "unexpected row"
-         )
+             ( forename ^ " " ^ surname,
+               List.hd grade,
+               Some (rank, out_of),
+               total,
+               [
+                 ("1", paper1, total_p1);
+                 ("2", paper2, total_p2);
+                 ("3", paper3, total_p3);
+               ] )
+         | _ as row ->
+             Printf.printf "ERR: %s\n%!" (String.concat "; " row);
+             failwith "unmatched row")
 
   let ib_candidates out_of rows =
-    rows
-    |> CCList.drop 3
+    rows |> CCList.drop 3
     |> CCList.filter (function
-           | _bcn :: _name :: "CHR" :: _ -> true
-           | _ -> false
-         )
+         | _bcn :: _surname :: _forename :: "CHR" :: _ -> true
+         | _ -> false)
     |> CCList.map (function
-           | _bcn :: name :: "CHR" :: _gender :: grade :: rank :: total :: total_p4 :: total_p5 :: total_p6 :: total_p7 :: columns
-             ->
-              let open CCList in
-              let columns = drop 2 columns in
-              let paper4, columns = columns |> take_drop  9 in
-              let paper5, columns = columns |> take_drop  8 in
-              let paper6, columns = columns |> take_drop 10 in
-              let paper7          = columns |> take      10 in
-              name, grade, Some (rank, out_of), total,
-              [ "4", paper4, total_p4;
-                "5", paper5, total_p5;
-                "6", paper6, total_p6;
-                "7", paper7, total_p7
-              ]
-
-           | _ as row
-             ->
-              Printf.printf "ERR: %s\n%!" (String.concat "; " row);
-              failwith "unexpected row"
-         )
+         | _bcn :: surname :: forename :: "CHR" :: _gender :: rank :: grade
+           :: total :: _provisional_mark :: _difference :: _updated
+           :: _percentage :: total_p4 :: total_p5 :: total_p6 :: total_p7
+           :: columns ->
+             let open CCList in
+             let columns = drop 6 columns in
+             let paper4, columns = columns |> take_drop 8 in
+             let paper5, columns = columns |> take_drop 8 in
+             let paper6, columns = columns |> take_drop 10 in
+             let paper7 = columns |> take 10 in
+             ( forename ^ " " ^ surname,
+               grade,
+               Some (rank, out_of),
+               total,
+               [
+                 ("4", paper4, total_p4);
+                 ("5", paper5, total_p5);
+                 ("6", paper6, total_p6);
+                 ("7", paper7, total_p7);
+               ] )
+         | _ as row ->
+             Printf.printf "ERR: %s\n%!" (String.concat "; " row);
+             failwith "unexpected row")
 
   let ii_candidates out_of rows =
-    rows
-    |> CCList.drop 3
+    rows |> CCList.drop 3
     |> CCList.filter (function
-           | _bcn :: _name :: "CHR" :: _ -> true
-           | _ -> false
-         )
+         | _bcn :: _surname :: _forename :: "CHR" :: _ -> true
+         | _ -> false)
     |> CCList.map (function
-           | _bcn :: name :: "CHR" :: _gender :: _ :: grade :: _outof :: _distinction
-             :: rank :: _total_nodis :: total :: _total_p7 :: total_p8 :: total_p9 :: dis
-             :: _penalties :: _bonus :: columns
-             ->
-              let open CCList in
-              let uoas,   columns = columns |> take_drop (List.length modules) in
-              let         columns = columns |> drop      15 in
-              let paper8, columns = columns |> take_drop 13 in
-              let paper9          = columns |> take      13 in
-              name, grade, Some (rank, out_of), total,
-              [ "dis", [ dis ], "";
-                "uoas", uoas, "";
-                "8", paper8, total_p8;
-                "9", paper9, total_p9
-              ]
-
-           | _ as row
-             ->
-              Printf.printf "ERR: %s\n%!" (String.concat "; " row);
-              failwith "unexpected row"
-         )
+         | _bcn :: surname :: forename :: "CHR" :: _gender :: _ :: grade
+           :: _updates :: _outof :: _distinction :: rank :: _total_nodis
+           :: total :: _percentage :: total_p8 :: total_p9 :: dis :: _penalties
+           :: columns ->
+             let open CCList in
+             let uoas, columns = columns |> take_drop (List.length modules) in
+             let columns = columns |> drop 5 in
+             let paper8, columns = columns |> take_drop 13 in
+             let paper9 = columns |> take 13 in
+             ( forename ^ " " ^ surname,
+               grade,
+               Some (rank, out_of),
+               total,
+               [
+                 ("dis", [ dis ], "");
+                 ("uoas", uoas, "");
+                 ("8", paper8, total_p8);
+                 ("9", paper9, total_p9);
+               ] )
+         | _ as row ->
+             Printf.printf "ERR: %s\n%!" (String.concat "; " row);
+             failwith "unexpected row")
 end
 
 module F = struct
