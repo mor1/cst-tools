@@ -138,74 +138,58 @@ module F = struct
   let s = I.string A.empty
   let b = I.string A.(st bold)
   let u = I.string A.(st underline)
-
-  let lpad ?(f=s) i x = x |> f |> I.hsnap ~align:`Right i
-  let rpad ?(f=s) i x = x |> f |> I.hsnap ~align:`Left i
-
+  let lpad ?(f = s) i x = x |> f |> I.hsnap ~align:`Right i
+  let rpad ?(f = s) i x = x |> f |> I.hsnap ~align:`Left i
   let endl line = Notty_unix.(line |> eol |> output_image)
-
   let sep = s (String.make 80 '-')
-
-  let name n = rpad ~f:b 18 n
-
-  let grade g = match P.grade g with
-    | None -> I.empty
-    | Some g -> rpad ~f:b 6 g
-
-  let total t = lpad ~f:b 18 ("Total "^t^"/400")
-
-  let rank = function
-    | None -> I.empty
-    | Some (r, s) -> I.strf "rank:%s/%d" r s
+  let name n = rpad ~f:b 24 n
+  let grade g = match P.grade g with None -> I.empty | Some g -> rpad ~f:b 6 g
+  let total t = lpad ~f:b 18 ("Total " ^ t ^ "/400")
+  let rank = function None -> I.empty | Some (r, s) -> I.strf "rank:%s/%d" r s
 
   let paper p =
-    p |> List.mapi (fun i -> function
-             | "" -> I.empty
-             | v -> lpad 5 (string_of_int (i+1)) <|> s ":" <|> lpad 3 v
-           )
-    |> I.vcat
+    p
+    |> List.mapi (fun i -> function
+         | "" -> I.empty
+         | v -> lpad 5 (string_of_int (i + 1)) <|> s ":" <|> lpad 3 v)
+    |> I.vcat |> I.vsnap ~align:`Top 5
 
   let uoas p =
-    p |> List.mapi (fun i -> function
-             | "X" -> I.empty
-             | v -> lpad 5 (CCList.nth modules i) <|> s ":" <|> lpad 3 (v |> float_of_string |> int_of_float |> string_of_int)
-           )
+    p
+    |> List.mapi (fun i -> function
+         | "X" -> I.empty
+         | v ->
+             lpad 5 (CCList.nth modules i)
+             <|> s ":"
+             <|> lpad 3 (v |> float_of_string |> int_of_float |> string_of_int))
     |> I.vcat
 
   let papers ps =
-    let papers ps = ps |> List.map (fun (i, p, t) ->
-                              match CCList.count (fun x -> x <> "") p with
-                              | 0 -> I.empty
-                              | _ -> rpad ~f:u 20 ("Paper " ^ i)
-                                     <->
-                                       paper p
-                                     <->
-                                       rpad ~f:u 20 ("Total: " ^ t)
-                            )
+    let papers ps =
+      ps
+      |> List.map (fun (i, p, t) ->
+             match CCList.count (fun x -> x <> "") p with
+             | 0 -> I.empty
+             | _ ->
+                 rpad ~f:u 20 ("Paper " ^ i)
+                 <-> paper p
+                 <-> rpad ~f:u 20 ("Total: " ^ t))
     in
     match ps with
-    | ("dis",dis,_) :: ("uoas",scores,_) :: ps ->
-       ((rpad ~f:u 12 "Dissertation" <|> (List.hd dis |> I.strf ": %s"))
-        <->
-          I.void 22 1
-        <->
-          (match CCList.count (fun x -> x <> "X") scores with
-           | 0 -> I.empty
-           | _ -> rpad ~f:u 22 ("Units of Assessment")
-                  <->
-                    uoas scores
-          )
-       ) <|> (papers ps |> I.hcat)
-
-    | _ -> (papers ps |> I.hcat)
+    | ("dis", dis, _) :: ("uoas", scores, _) :: ps ->
+        rpad ~f:u 12 "Dissertation"
+        <|> (List.hd dis |> I.strf ": %s")
+        <-> I.void 22 1
+        <-> (match CCList.count (fun x -> x <> "X") scores with
+            | 0 -> I.empty
+            | _ -> rpad ~f:u 22 "Units of Assessment" <-> uoas scores)
+        <|> (papers ps |> I.hcat)
+    | _ -> papers ps |> I.hcat
 
   let candidate (n, g, r, t, ps) =
-    sep
-    <->
-      (name n <|> grade g <|> rank r <|> total t)
-    <->
-      (match P.grade g with Some "W" -> I.empty | _ -> papers ps)
-
+    sep <-> s "Congratulations!" <-> s ""
+    <-> (name n <|> grade g <|> rank r <|> total t)
+    <-> match P.grade g with Some "W" -> I.empty | _ -> papers ps
 end
 
 let ( >> ) f g x = g (f x)
@@ -214,14 +198,13 @@ let ( <| ) f x = f x
 let () =
   let filename = Sys.argv.(1) in
   let out_of = Sys.argv.(2) |> int_of_string in
-  let process = match P.cst_part filename with
+  let process =
+    match P.cst_part filename with
     | "IA" -> P.ia_candidates out_of
     | "IB" -> P.ib_candidates out_of
     | "II" -> P.ii_candidates out_of
     | _ as s -> failwith ("unsupported Part: " ^ s)
   in
-  (Csv.load
-   >> process
-   >> List.iter F.(candidate >> endl)
-  )
+  Csv.load >> process
+  >> List.iter F.(candidate >> endl)
   |> Array.iter <| [| filename |]
