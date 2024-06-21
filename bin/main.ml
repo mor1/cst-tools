@@ -1,22 +1,22 @@
 open Notty
 open Notty.Infix
 
+let ( >> ) f g x = g (f x)
+let ( <| ) f x = f x
+
 let modules =
   [
     "AOS";
     "ADS";
     "AGIP";
-    "ARO";
+    "HCAI";
     "CAT";
     "CSM";
     "CYC";
     "DNN";
     "DSP";
-    "IML";
     "FL";
     "ER";
-    "CC";
-    "IRO";
     "MSP";
     "MVP";
     "MH";
@@ -74,11 +74,10 @@ module P = struct
          | _ -> false)
     |> CCList.map (function
          | _bcn :: surname :: forename :: "CHR" :: _gender :: rank :: grade
-           :: total :: _provisional_mark :: _difference :: _updated
-           :: _percentage :: total_p4 :: total_p5 :: total_p6 :: total_p7
+           :: _graderank :: total :: _percentage
+           :: total_p4 :: total_p5 :: total_p6 :: total_p7 :: _penalties
            :: columns ->
              let open CCList in
-             let columns = drop 6 columns in
              let paper4, columns = columns |> take_drop 8 in
              let paper5, columns = columns |> take_drop 8 in
              let paper6, columns = columns |> take_drop 10 in
@@ -100,16 +99,15 @@ module P = struct
   let ii_candidates out_of rows =
     rows |> CCList.drop 3
     |> CCList.filter (function
-         | _bcn :: _surname :: _forename :: "CHR" :: _ -> true
+         | _bcn :: _surname :: _forename :: _crsid :: "CHR" :: _ -> true
          | _ -> false)
     |> CCList.map (function
-         | _bcn :: surname :: forename :: "CHR" :: _gender :: _ :: grade
-           :: _updates :: _outof :: _distinction :: rank :: _total_nodis
-           :: total :: _percentage :: total_p8 :: total_p9 :: dis :: _penalties
+         | _bcn :: surname :: forename :: _crsid :: "CHR" :: _gender :: grade
+           :: _graderank :: _distinction :: rank :: total :: _percentage
+           :: _total_modules :: total_p8 :: total_p9 :: dis :: _penalties
            :: columns ->
              let open CCList in
              let uoas, columns = columns |> take_drop (List.length modules) in
-             let columns = columns |> drop 5 in
              let paper8, columns = columns |> take_drop 13 in
              let paper9 = columns |> take 13 in
              ( forename ^ " " ^ surname,
@@ -150,7 +148,7 @@ module F = struct
   let uoas p =
     p
     |> List.mapi (fun i -> function
-         | "X" -> I.empty
+         | "" -> I.empty
          | v ->
              lpad 5 (CCList.nth modules i)
              <|> s ":"
@@ -173,7 +171,7 @@ module F = struct
         rpad ~f:u 12 "Dissertation"
         <|> (List.hd dis |> I.strf ": %s")
         <-> I.void 22 1
-        <-> (match CCList.count (fun x -> x <> "X") scores with
+        <-> (match CCList.count (fun x -> x <> "") scores with
             | 0 -> I.empty
             | _ -> rpad ~f:u 22 "Units of Assessment" <-> uoas scores)
         <|> (papers ps |> I.hcat)
@@ -184,9 +182,6 @@ module F = struct
     <-> (name n <|> grade g <|> rank r <|> total t)
     <-> match P.grade g with Some "W" -> I.empty | _ -> papers ps
 end
-
-let ( >> ) f g x = g (f x)
-let ( <| ) f x = f x
 
 let () =
   let filename = Sys.argv.(1) in
