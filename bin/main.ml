@@ -40,28 +40,29 @@ module P = struct
     | _ as s -> failwith ("unknown Part of Tripos: " ^ s)
 
   let ia_candidates out_of rows =
-    rows |> CCList.drop 3
+    rows |> CCList.drop 2
     |> CCList.filter (function
-         | _bcn :: _surname :: _forename :: "CHR" :: _ -> true
+         | _bcn :: _gender :: _surname :: _forename :: "CHR" :: _ -> true
          | _ -> false)
     |> CCList.map (function
-         | _bcn :: surname :: forename :: "CHR" :: total_p1 :: total_p2
-           :: total_p3 :: _total_maths :: _penalties :: total :: _percentage
-           :: rank :: columns ->
+         | _bcn :: _gender :: surname :: forename :: "CHR" 
+            :: total_p1 :: total_p2 :: total_p3 :: total_maths 
+            :: _penalties :: total :: _percentage :: rank :: grade :: columns ->
              let open CCList in
              let paper1, columns = columns |> take_drop 10 in
              let paper2, columns = columns |> drop 1 |> take_drop 10 in
              let paper3, columns = columns |> drop 1 |> take_drop 9 in
-             let grade = columns |> drop 9 |> drop 1 |> take 1 in
+             let maths = columns |> drop 1 |> take 2 in
 
              ( forename ^ " " ^ surname,
-               List.hd grade,
+               grade,
                Some (rank, out_of),
                total,
                [
                  ("1", paper1, total_p1);
                  ("2", paper2, total_p2);
                  ("3", paper3, total_p3);
+                 ("NST Maths", maths, total_maths)
                ] )
          | _ as row ->
              Printf.printf "ERR: %s\n%!" (String.concat "; " row);
