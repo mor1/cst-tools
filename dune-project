@@ -1,26 +1,24 @@
-(lang dune 3.10)
+(lang dune 3.17)
 
 (name breakdown)
 
 (generate_opam_files true)
 
-; (source
-;  (github username/reponame))
-; 
-; (authors "Author Name")
-; 
-; (maintainers "Maintainer Name")
-; 
-; (license LICENSE)
-; 
-; (documentation https://url/to/documentation)
+(source
+ (github mor1/cst-tools))
+
+(authors "Richard Mortier <mort@cantab.net>")
+
+(maintainers "Richard Mortier <mort@cantab.net>")
+
+(license MIT)
 
 (package
  (name breakdown)
- (synopsis "A short synopsis")
- (description "A longer description")
+ (synopsis "Process CST mark spreadsheets")
+ (description "Generate some nice ASCII summaries of individual's marks")
  (depends ocaml dune notty csv containers)
  (tags
-  (topics "to describe" your project)))
+  ()))
 
-; See the complete stanza docs at https://dune.readthedocs.io/en/stable/dune-files.html#dune-project
+; See the complete stanza docs at https://dune.readthedocs.io/en/stable/reference/dune-project/index.html
