@@ -1,24 +1,25 @@
 _default:
     @just --list
 
+PWD := env("PWD")
 DOCDIR := "_build/default/_doc/_html/"
 
 # build `ocal`
 build:
-	dune build @all
+    dune build @all
 
 # clean droppings
 clean:
-	dune clean
+    dune clean
 
 # install `ocal`, including local install
 install:
-	dune build @install
-	ln -sf ~/u/src/breakdown/_build/install/default/bin/breakdown ~/.local/bin/
+    dune build @install
+    ln -sf {{PWD}}/_build/install/default/bin/breakdown ~/.local/bin/
 
 # uninstall `ocal`
 uninstall:
-	dune uninstall
+    dune uninstall
 
 # format sources
 format:
@@ -26,22 +27,22 @@ format:
 
 # lint sources
 lint:
-	dune build @lint
-	dune-release lint
+    dune build @lint
+    dune-release lint
 
 # build docs
 doc:
-	dune build @doc
-	dune build @doc-private
+    dune build @doc
+    dune build @doc-private
 
 # open docs
 read: doc
-	handlr open {{DOCDIR}}/index.html || open {{DOCDIR}}
+    handlr open {{DOCDIR}}/index.html || open {{DOCDIR}}
 
 # tag and create a release
 release:
-	dune-release tag
-	dune-release -vv
+    dune-release tag
+    dune-release -vv
 
 # install dependencies
 depends:
