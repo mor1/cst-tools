@@ -1,3 +1,4 @@
 (executable
  (public_name breakdown)
- (name main))
+ (name main)
+ (libraries containers csv notty notty.unix))

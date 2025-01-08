@@ -46,4 +46,4 @@ release:
 # install dependencies
 depends:
     opam install --yes dune-release odoc
-    dune pkg lock
+    opam install --yes . --deps-only
