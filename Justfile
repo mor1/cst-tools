@@ -1,31 +1,41 @@
+# SPDX-FileCopyrightText: 2024 Richard Mortier <mort@cantab.net>
+#
+# SPDX-License-Identifier: ISC
+
 _default:
     @just --list
 
 PWD := env("PWD")
-DOCDIR := "_build/default/_doc/_html/"
+DOCDIR := "_build/default/_doc/_html"
+BUILDDIR := "_build/install/default/bin"
+TARGET := "breakdown"
 
-# build `ocal`
+# build targets
 build:
     dune build @all
 
-# clean droppings
+# cleanup
 clean:
     dune clean
 
-# install `ocal`, including local install
-install:
+# install targets
+install: build
     dune build @install
-    ln -sf {{PWD}}/_build/install/default/bin/breakdown ~/.local/bin/
+    ln -sf {{PWD}}/{{BUILDDIR}}/{{TARGET}} ~/.local/bin/
 
-# uninstall `ocal`
+# uninstall targets
 uninstall:
     dune uninstall
+
+# run any tests
+test:
+    dune runtest
 
 # format sources
 format:
     dune fmt
 
-# lint sources
+# lint everything
 lint:
     dune build @lint
     dune-release lint
@@ -35,7 +45,7 @@ doc:
     dune build @doc
     dune build @doc-private
 
-# open docs
+# open the docs for reading
 read: doc
     handlr open {{DOCDIR}}/index.html || open {{DOCDIR}}
 
